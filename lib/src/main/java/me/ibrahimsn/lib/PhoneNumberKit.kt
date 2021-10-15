@@ -2,6 +2,7 @@ package me.ibrahimsn.lib
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.telephony.TelephonyManager
 import android.text.InputFilter
 import android.text.InputType
 import androidx.appcompat.app.AppCompatActivity
@@ -259,12 +260,26 @@ class PhoneNumberKit(private val context: Context) {
      * Provides country for given country code
      */
     fun getCountry(countryCode: Int?): Country? {
+        if(countryCode == RUS_COUNTRY_CODE){
+            val iso = getCurrentIso()
+            val currentIso = if(iso == KZ_REGION) KZ_REGION else RUS_REGION
+            val country = Countries.list.find { it.iso2 == currentIso }
+            country?.let {
+                return it
+            }
+        }
         for (country in Countries.list) {
             if (country.countryCode == countryCode) {
                 return country
             }
         }
         return null
+    }
+
+    private fun getCurrentIso(): String {
+        val telephoneManager =
+            context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        return telephoneManager.networkCountryIso
     }
 
     /**
@@ -282,5 +297,11 @@ class PhoneNumberKit(private val context: Context) {
     private fun validate(number: CharSequence?): Boolean {
         if (number == null) return false
         return core.validateNumber(number.toString(), country?.iso2)
+    }
+
+    companion object{
+        private const val RUS_COUNTRY_CODE = 7
+        private const val RUS_REGION = "ru"
+        private const val KZ_REGION = "kz"
     }
 }
